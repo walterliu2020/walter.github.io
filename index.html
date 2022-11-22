@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <title>JSAPI</title>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+          integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu"
+          crossorigin="anonymous">
+    <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css"
+          integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ"
+          crossorigin="anonymous">
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
+            integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+            crossorigin="anonymous"></script>
+    <style type="text/css">
+        .row {
+            margin-top: 10px
+        }
+    </style>
+</head>
+<body onload="javascript:initTransparentTitle()">
+<div class="container" style="padding-bottom:20px">
+    <h5>NFC JSAPI</h5>
+    <div class="row">
+        <div class="col-xs-6">
+            <button type="button" class="btn btn-warning btn-sm"
+                    onclick="javascript:callBridge('showToast',{content:'It is a toast', duration:1})">
+                showToast
+            </button>
+        </div>
+        <div class="col-xs-6">
+            <button type="button" class="btn btn-warning btn-sm"
+                    onclick="javascript:callBridge('onDiscoverNfcData',{})">
+                    onDiscoverNfcData
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-6">
+            <button type="button" class="btn btn-warning btn-sm"
+                    onclick="javascript:callBridge('startScan',{})">startScan
+            </button>
+        </div>
+        <div class="col-xs-6">
+            <button type="button" class="btn btn-warning btn-sm"
+                    onclick="javascript:callBridge('cancelScan',{})">cancelScan
+            </button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    function callBridge(method,params) {
+        KOHJSBridge.invoke(method, params, function(res) {
+            if (method !=='popWindow' && method !== 'pushWindow' && method!=='alert') {
+                var content = JSON.stringify(res);
+                if (content !== '{}'){
+                    alert(content);
+                }
+            }
+        })
+    };
+
+    function onDiscoverNfcData(params) {
+        alert(params);
+    }
+
+    function initTransparentTitle() {
+        if (window.KOHJSBridge!=null) {
+            callBridge('setTransparentTitleBar', {type: 'auto'});
+        } else {
+            document.addEventListener('fireworksBridgeReady', function(e) {
+                callBridge('setTransparentTitleBar', {type: 'auto'});
+            });
+        }
+    };
+    function callConfirm(params) {
+        KOHJSBridge.invoke('confirm', params, function(res) {
+            if (res.confirm) {
+                callBridge('pushWindow',{url:'https://www.baidu.com'});
+            } else {
+                alert('你点击了取消');
+            }
+        })
+    }
+    function callPrompt(params) {
+        KOHJSBridge.invoke('prompt', params, function(res) {
+            if (res.confirm) {
+                alert('输入的内容: '+res.confirmContent);
+            } else {
+                alert('你点击了取消');
+            }
+        })
+    }
+    const pullDownRefreshCallback = function(e) {
+            e.preventDefault();
+            callBridge('showToast', {content:'pull down refresh', duration:1});
+            setTimeout(function(){
+                callBridge('stopPullDownRefresh',{})
+            },2000);
+        };
+    function pullDownRefreshListen() {
+        KOHJSBridge.on('onPullDownRefresh', pullDownRefreshCallback);
+    };
+    function offPullDownRefresh() {
+        KOHJSBridge.off('onPullDownRefresh');
+    };
+    function backListen() {
+        KOHJSBridge.on('back', function(e) {
+            e.preventDefault();
+            callBridge('showToast', {content:'back is intercepted', duration: 1});
+        })
+    };
+    function offBackListen() {
+        KOHJSBridge.off('back');
+    };
+    function callCanIUseBridge() {
+        const api = document.getElementById('canIUse').value;
+        callBridge('canIUse', {api:api});
+    };
+    function onNetworkChangeListen() {
+        KOHJSBridge.on('networkStatusChange', function(e) {
+            alert(JSON.stringify(e.bizParams));
+        })
+    };
+    function offNetworkChangeListen() {
+        KOHJSBridge.off('networkStatusChange');
+    };
+    function onKeyboardHeightChangeListen() {
+        KOHJSBridge.on('keyboardHeightChange', function(e) {
+            alert(JSON.stringify(e.bizParams));
+        })
+    };
+    function offKeyboardHeightChangeListen() {
+        KOHJSBridge.off('keyboardHeightChange');
+    };
+    function resumeListen() {
+        KOHJSBridge.on('resume', function(e) {
+            callBridge('showToast', {content:'page resumed', duration: 1});
+        })
+    };
+    function offResumeListen() {
+        KOHJSBridge.off('resume');
+    };
+    function pauseListen() {
+        KOHJSBridge.on('pause', function(e) {
+            callBridge('showToast', {content:'page paused', duration: 1});
+        })
+    };
+    function offPauseListen() {
+        KOHJSBridge.off('pause');
+    };
+    function optionMenuClickListen() {
+        KOHJSBridge.on('optionMenuClick', function(e) {
+            e.preventDefault();
+            callBridge('showToast', {content:'option menu click intercepted', duration: 0});
+        })
+    };
+    function offOptionMenuClickListen() {
+        KOHJSBridge.off('optionMenuClick');
+    };
+    function callPostRequest() {
+        const data = {age:11}
+        callBridge('request', {url:'http://httpbin.org/post', method:'POST', data:JSON.stringify(data)})
+    }
+</script>
+</body>
+</html>
